@@ -3,7 +3,8 @@ import User from "../models/user.model.js"
 
 export const protectRoute = async (req,res,next) =>{
     try{
-        const token = req.cookie.jwt;
+        
+        const token = req.cookies.jwt;
         if(!token){
             return res.status(401).json({message:"unAuthorized - no token provided"})
         }
@@ -17,10 +18,12 @@ export const protectRoute = async (req,res,next) =>{
         }
         req.user = user;
 
-        next();
+    next();    
     }
     catch(err){
+        res.status(500).json({message:"Internal server error"})
         console.log("error from middleware auth",err);
         
     }
+    
 }
