@@ -25,6 +25,7 @@ export const login = async (req, res) => {
             fullname: user.fullname,
             email: user.email,
             profilepic: user.profilepic,
+            createdAt:user.createdAt
         })
 
     } catch (err) {
@@ -35,6 +36,8 @@ export const signup = async (req, res) => {
     const { fullname, email, password } = req.body
     try {
         if (!fullname || !email || !password) {
+            console.log(req.body);
+            
             res.status(400).json({ message: "all fields are required" })
         }
         if (password.length < 6) {
@@ -59,7 +62,8 @@ export const signup = async (req, res) => {
                 _id: newUser._id,
                 fullname: newUser.fullname,
                 email: newUser.email,
-                profilepic: newUser.profilepic
+                profilepic: newUser.profilepic,
+                createdAt:user.createdAt
             })
         }
         else {
@@ -72,7 +76,10 @@ export const signup = async (req, res) => {
 }
 export const logout = (req, res) => {
     try{
+    console.log("searching jwt...");
+    
     res.cookie("jwt","",{maxAge:0})
+    return res.status(200).json({message:"logged out successfully"})
     }
     catch(err){
     console.log(err);
@@ -82,16 +89,20 @@ export const logout = (req, res) => {
 
 export const updateProfile = async (req,res)=>{
     try{
-        const {profiePic} = req.body;
+        const {profilePic} = req.body;
         const userId = req.user._id
 
         if(!profilePic) {
             return res.status(400).json({message:"profie pic is required"})
         }
 
-        const uploadResponse = await cloudinary.uploader.upload(profiePic)
-        const updatedUser = User.findByIdAndUpdate(userId, {profilePic:uploadResponse.secure_url}, {new:true})
-        res.status(400).json({message:"profile pic uploaded successfully"})
+        const uploadResponse = await cloudinary.uploader.upload(profilePic)
+        console.log(uploadResponse);
+        
+        const updatedUser = await User.findByIdAndUpdate(userId, {profilepic:uploadResponse.secure_url}, {new:true}).select("-password");
+        console.log(updatedUser);
+        
+        res.status(200).json({updatedUser})
     }catch(err){
         console.log("err from profile",err);
         res.status(500).json({message:"Internal server error"})

@@ -1,18 +1,30 @@
-import { MessageSquare,User,Lock,EyeOff,Eye,Mail,Link } from 'lucide-react'
+import { MessageSquare,User,Lock,EyeOff,Eye,Mail,Loader2 } from 'lucide-react'
 import React, { useState } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
-
+import { Link } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 const SignUpPage = () => {
-  const {isSigningUp} = useAuthStore();
+  const {signup,isSigningUp} = useAuthStore();
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
-    fullnName: "",
+    fullname: "",
     email: "",
     password: "",
   })
-  const validateForm = () => { }
+  const validateForm = () => {
+    if (!formData.fullname.trim()) return toast.error("Full Name is required");
+    if (!formData.email.trim()) return toast.error("Email is required");
+    if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Email is invalid");
+    if (formData.password.length < 6) return toast.error("Password must be at least 6 characters long");
+    return true;
+  }
   const handleSubmit = (e) => {
     e.preventDefault();
+    const success = validateForm();
+
+    if (success) {
+      signup(formData);
+    }
   }
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
@@ -45,8 +57,8 @@ const SignUpPage = () => {
                   type="text"
                   className={`input input-bordered w-full pl-10`}
                   placeholder="John Doe"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  value={formData.fullname}
+                  onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
                 />
               </div>
             </div>
