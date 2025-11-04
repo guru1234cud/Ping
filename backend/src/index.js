@@ -5,8 +5,10 @@ import messageRoutes from './routes/message.route.js';
 import {connectDB} from './lib/db.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+
+import {app, server} from './lib/socket.js'
 dotemv.config()
-const app = express();
+
 app.use(cors({
         origin:"http://localhost:5173",
         credentials:true}
@@ -16,6 +18,6 @@ app.use(express.json())
 const PORT = process.env.PORT || 3002
 app.use('/api/auth',authRoutes);
 app.use('/api/message',messageRoutes);
-app.listen(PORT,()=>{console.log("server is running on "+PORT)
+server.listen(PORT,()=>{console.log("server is running on "+PORT)
     connectDB()
 })
