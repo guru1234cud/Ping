@@ -10,7 +10,6 @@ const Sidebar = () => {
 
     useEffect(() => {
         getUsers();
-        console.log(users);
         
     }, [getUsers])
 

@@ -63,7 +63,7 @@ export const signup = async (req, res) => {
                 fullname: newUser.fullname,
                 email: newUser.email,
                 profilepic: newUser.profilepic,
-                createdAt:user.createdAt
+                createdAt:newUser.createdAt
             })
         }
         else {

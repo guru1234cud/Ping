@@ -2,12 +2,13 @@ import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId,io } from "../lib/socket.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
-
+import mongoose from "mongoose";
 
 export const getUsersForSidebar = async (req, res) => {
     try {
-        const loggedInUser = req.user._id;
+        const loggedInUser = new mongoose.Types.ObjectId(req.user._id);
         const filteredUsers = await User.find({ _id: { $ne: loggedInUser } }).select("-password")
+        console.log(filteredUsers);
         res.status(200).json(filteredUsers)
     } catch (err) {
         console.log("error form sidebaruserget:", err);
@@ -49,9 +50,9 @@ export const sendMessage = async (req,res)=>{
             image:imageurl
         })
         await newMessage.save();
-        const getReceiverSocketId = getReceiverSocketId(receiverId)
-        if (getReceiverSocketId){
-            io.to(getReceiverSocketId).emit("newMessage",newMessage);
+        const ReceiverSocketId = getReceiverSocketId(receiverId)
+        if (ReceiverSocketId){
+            io.to(ReceiverSocketId).emit("newMessage",newMessage);
         }
         res.status(201).json(newMessage)
     }catch(err){

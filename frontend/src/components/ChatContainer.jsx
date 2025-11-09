@@ -5,9 +5,10 @@ import MessageInput from './MessageInput';
 import MessageSkeleton from './skeletons/MessageSkeleton';
 import { useAuthStore } from '../store/useAuthStore';
 import { formatMessageTime } from '../lib/utils';
+
 const ChatContainer = () => {
 
-  const {messages,getMessages, isMessageLoading,selectedUser}= useChatStore();
+  const {messages,getMessages, isMessageLoading,selectedUser,subscribeToMessages,unsubscribeFromMessages}= useChatStore();
   const {authUser} = useAuthStore();
   if (isMessageLoading) return (
     <div className='flex-1 flex flex-col overflow-auto'>
@@ -19,7 +20,9 @@ const ChatContainer = () => {
   useEffect(()=>{
     getMessages(selectedUser._id)
     subscribeToMessages();
-    return ()=> unscribeToMessages();
+    console.log("messsages:"+messages)
+    console.log("auth"+authUser._id)
+    return ()=> unsubscribeFromMessages();
   },[selectedUser._id, getMessages])
   
   return (
@@ -27,7 +30,7 @@ const ChatContainer = () => {
       <ChatHeader />
       <div className='flex-1 flex flex-col overflow-auto'>
         {messages.map((msg)=>(
-          <div key={msg._id} className={`chat ${msg.senderId === authUser._id}:chat-start : chat-end`}>
+          <div key={msg._id} className={`chat ${msg.senderId === authUser._id?"chat-start" : "chat-end"}`}>
             <div className='chat-image avatar'>
               <div className='size-10 rounded-full border'>
                 <img 
