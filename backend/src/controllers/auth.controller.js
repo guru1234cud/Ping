@@ -6,17 +6,19 @@ export const login = async (req, res) => {
     const {email, password } = req.body
     try {
         if(!email || !password){
-            res.status(400).json({ message: "all fields are required" })
+            return res.status(400).json({ message: "all fields are required" })
         }
         if (password.length < 6) {
             return res.status(400).json({ message: "password must be at least of 6 characters" })
         }
-        const user = await User.findOne({ email })
+
+        const trimmedEmail = email.trim().toLowerCase();
+        const user = await User.findOne({ email: trimmedEmail })
         if (!user) {
             return res.status(400).json({ message: "invalid credentials" })
         }
-        const ispassowrdcrt = await bcrypt.compare(password, user.password)
-        if (!ispassowrdcrt) {
+        const isPasswordCorrect = await bcrypt.compare(password, user.password)
+        if (!isPasswordCorrect) {
             return res.status(400).json({ message: "invalid credentials" })
         }
         generatetoken(user._id, res);
@@ -29,6 +31,7 @@ export const login = async (req, res) => {
         })
 
     } catch (err) {
+        console.error("Login error:", err);
         res.status(500).json({ message: "Internal server error" })
     }
 }
@@ -36,14 +39,16 @@ export const signup = async (req, res) => {
     const { fullname, email, password } = req.body
     try {
         if (!fullname || !email || !password) {
-            console.log(req.body);
-            
-            res.status(400).json({ message: "all fields are required" })
+            return res.status(400).json({ message: "all fields are required" })
         }
         if (password.length < 6) {
             return res.status(400).json({ message: "password must be at least of 6 characters" })
         }
-        const user = await User.findOne({ email })
+
+        const trimmedEmail = email.trim().toLowerCase();
+        const trimmedFullname = fullname.trim();
+
+        const user = await User.findOne({ email: trimmedEmail })
         if (user) {
             return res.status(400).json({ message: "Email already exist" })
         }
@@ -51,8 +56,8 @@ export const signup = async (req, res) => {
         const hashedpassword = await bcrypt.hash(password, salt)
 
         const newUser = new User({
-            fullname: fullname,
-            email: email,
+            fullname: trimmedFullname,
+            email: trimmedEmail,
             password: hashedpassword
         })
         if (newUser) {
@@ -67,23 +72,21 @@ export const signup = async (req, res) => {
             })
         }
         else {
-            res.status(400).json({ message: "problem in creating the user" })
+            return res.status(400).json({ message: "problem in creating the user" })
         }
     } catch (err) {
-        console.log(err);
+        console.error("Signup error:", err);
         res.status(500).json({ message: "Internal server error" })
     }
 }
 export const logout = (req, res) => {
     try{
-    console.log("searching jwt...");
-    
-    res.cookie("jwt","",{maxAge:0})
-    return res.status(200).json({message:"logged out successfully"})
+        res.cookie("jwt","",{maxAge:0})
+        return res.status(200).json({message:"logged out successfully"})
     }
     catch(err){
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" })
+        console.error("Logout error:", err);
+        res.status(500).json({ message: "Internal server error" })
     }
 }
 
@@ -93,27 +96,32 @@ export const updateProfile = async (req,res)=>{
         const userId = req.user._id
 
         if(!profilePic) {
-            return res.status(400).json({message:"profie pic is required"})
+            return res.status(400).json({message:"profile pic is required"})
         }
 
-        const uploadResponse = await cloudinary.uploader.upload(profilePic)
-        console.log(uploadResponse);
-        
+        const uploadResponse = await cloudinary.uploader.upload(profilePic, {
+            folder: "ping_profiles",
+            resource_type: "image",
+            allowed_formats: ["jpg", "png", "jpeg", "gif", "webp"],
+            transformation: [
+                { width: 500, height: 500, crop: "limit" },
+                { quality: "auto" }
+            ]
+        })
+
         const updatedUser = await User.findByIdAndUpdate(userId, {profilepic:uploadResponse.secure_url}, {new:true}).select("-password");
-        console.log(updatedUser);
-        
-        res.status(200).json({updatedUser})
+
+        res.status(200).json(updatedUser)
     }catch(err){
-        console.log("err from profile",err);
+        console.error("Update profile error:", err);
         res.status(500).json({message:"Internal server error"})
     }
 }
 export const checkAuth = (req,res)=>{
     try{
-        res.json(req.user).status(200);
+        res.status(200).json(req.user);
     }catch(err){
-        console.log("error in checkauth", err);
+        console.error("Check auth error:", err);
         res.status(500).json({message:"Internal server error"})
     }
-
 }
